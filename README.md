@@ -32,7 +32,7 @@ Riverpod was chosen for better separation of concerns, compile-time safety, and 
 ![Add Task](screenshots/screenshot-task_add.png)
 
 // Application video
-![App Video](screenshots/service_filed_video.mp4)
+![App Video](screenshots/app-service_filed_video.mp4)
 
 
 // Apk file
