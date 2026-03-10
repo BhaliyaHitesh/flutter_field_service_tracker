@@ -3,32 +3,60 @@ import '../models/task_model.dart';
 import '../services/api_service.dart';
 
 final taskProvider =
-StateNotifierProvider<TaskNotifier, List<Task>>((ref) => TaskNotifier());
+StateNotifierProvider<TaskNotifier, AsyncValue<List<Task>>>(
+      (ref) => TaskNotifier(),
+);
 
-class TaskNotifier extends StateNotifier<List<Task>> {
-  TaskNotifier() : super([]) {
+class TaskNotifier extends StateNotifier<AsyncValue<List<Task>>> {
+  TaskNotifier() : super(const AsyncLoading()) {
     loadTasks();
   }
 
-  final api = ApiService();
+  final ApiService apiService = ApiService();
 
   Future<void> loadTasks() async {
     try {
-      final tasks = await api.fetchTasks();
-      state = tasks;
+      final tasks = await apiService.fetchTasks();
+      state = AsyncData(tasks);
     } catch (e) {
-      state = [];
+      state = AsyncError(e, StackTrace.current);
     }
   }
 
-  void addTask(Task task) {
-    state = [...state, task];
-  }
+  // void updateStatus(int id, String status) {
+  //   state.whenData((tasks) {
+  //     final updated = tasks.map((task) {
+  //       if (task.id == id) {
+  //         return task.copyWith(status: status);
+  //       }
+  //       return task;
+  //     }).toList();
+  //
+  //     state = AsyncData(updated);
+  //   });
+  // }
+
 
   void updateStatus(int id, String status) {
-    state = [
-      for (final task in state)
-        if (task.id == id) task.copyWith(status: status) else task
-    ];
+    final currentTasks = state.asData?.value ?? [];
+
+    final updatedTasks = currentTasks.map((task) {
+      if (task.id == id) {
+        return task.copyWith(status: status);
+      }
+      return task;
+    }).toList();
+
+    state = AsyncData(updatedTasks);
   }
+
+  void addTask(Task task) {
+    final currentTasks = state.asData?.value ?? [];
+
+    state = AsyncData([
+      ...currentTasks,
+      task,
+    ]);
+  }
+
 }
